@@ -16,11 +16,6 @@ function _init()
   poke(0x5f81,2)
  end
 
- --tables for info on all plrs
- tanks={}
-	mines={}
-	bullets={}
-	walls={}
 	plr_id=peek(0x5f81)
 
  --local varibles for self
@@ -75,8 +70,7 @@ end
 
 function _draw()
  cls(15)
- 
- map()
+ ?plr_id
  
  local s8={
   {1,false,false},
