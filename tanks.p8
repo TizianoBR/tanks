@@ -214,7 +214,7 @@ end
 
 function connect()
  if peek(0x5f80)==0 then
-	 poke(0x5f80,0)
+	 poke(0x5f80,1)
 	 poke(0x5f81,0)
 	 run()
 	end
