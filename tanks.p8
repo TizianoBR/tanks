@@ -30,7 +30,7 @@ function _init()
   dir=0
  }
  bull={}
- mine={}
+ mine={x=0,y=0,explode=false}
 end
 
 function _update()
@@ -169,7 +169,7 @@ function get_data()
  --get tanks
  tanks={}
  for i=0,5 do
-  if i==plr_id then
+  if i+1==plr_id then
    add(tanks,plr)
   else
 	  add(tanks,{
@@ -183,17 +183,21 @@ function get_data()
  --get mines
  mines={}
  for i=0,5 do
-  add(mines,{
-   x=peek(lookup.mine_x+18*i),
-   y=peek(lookup.mine_y+18*i),
-   explode=peek(lookup.mine_state
-    +18*i)==1})
+  if i+1==plr_id then
+   add(mines,mine)
+  else
+	  add(mines,{
+	   x=peek(lookup.mine_x+18*i),
+	   y=peek(lookup.mine_y+18*i),
+	   explode=peek(lookup.mine_state
+	    +18*i)==1})
+  end
  end
 
  --get bullets
  bullets={}
  for i=0,5 do
-  if plr_id==i then
+  if i+1==plr_id then
    add(bullets,bull)
   else
 	  local plr_bullets={}
@@ -243,15 +247,20 @@ function upload_data()
  
  --upload bullets
  for i=1,4 do
-  poke(lookup.bull_x+18*plr_id
-   -18+3*i-3,bull[i].x)
-  poke(lookup.bull_y+18*plr_id
-   -18+3*i-3,bull[i].y)
-  poke(lookup.bull_dir_state
-   +18*plr_id-18+3*i-3,
-   flr(bull[i].dir*8)
-   +(bull[i].explode
-   and 128 or 0))
+  if i>#bull then
+   memset(lookup.bull_x+18*plr_id
+	   -18+3*i-3,0,3)
+  else
+	  poke(lookup.bull_x+18*plr_id
+	   -18+3*i-3,bull[i].x)
+	  poke(lookup.bull_y+18*plr_id
+	   -18+3*i-3,bull[i].y)
+	  poke(lookup.bull_dir_state
+	   +18*plr_id-18+3*i-3,
+	   flr(bull[i].dir*8)
+	   +(bull[i].explode
+	   and 128 or 0))
+	 end
  end
  
  --upload walls
