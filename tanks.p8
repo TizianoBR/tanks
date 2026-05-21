@@ -69,7 +69,7 @@ function _update()
   b.y+=sin(b.dir)*0.75
  end
  
- update_data()
+ upload_data()
 end
 
 
@@ -120,14 +120,14 @@ function _draw()
 	 end
  end
  
- local dir16=flr(
-  ((plr.dir+0.03125)%1)*16)+1
- spr(1+s16[dir16][1],
-  plr.x-4,plr.y-4,1,1,
-  s16[dir16][2],s16[dir16][3])
+ for t in all(tanks) do
+	 local dir16=flr(
+	  ((t.dir+0.03125)%1)*16)+1
+	 spr(1+s16[dir16][1],
+	  t.x-4,t.y-4,1,1,
+	  s16[dir16][2],s16[dir16][3])
+ end
  
--- spr(16,plr.x+cos(p.d)*8-4,
---  plr.y+sin(plr.d)*8-4)
  pset(plr.x+cos(plr.dir)*9,
   plr.y+sin(plr.dir)*9,8)
  spr(0,plr.x+cos(plr.dir-0.005)
@@ -224,8 +224,8 @@ function get_data()
 	end
 end
 
-function update_data()
- --update tank
+function upload_data()
+ --upload tank
  poke(lookup.tank_x+18*(plr_id-1)
   ,tanks[plr_id].x)
  poke(lookup.tank_y+18*(plr_id-1)
@@ -233,7 +233,7 @@ function update_data()
  poke(lookup.tank_dir+18*(plr_id-1)
   ,flr(tanks[plr_id].dir*16))
  
- --update mine
+ --upload mine
  poke(lookup.mine_x+18*(plr_id-1)
   ,mines[plr_id].x)
  poke(lookup.mine_y+18*(plr_id-1)
@@ -242,7 +242,7 @@ function update_data()
   +18*(plr_id-1),
   mines[plr_id].explode and 1 or 0)
  
- --update bullets
+ --upload bullets
  for i=1,4 do
   poke(lookup.bull_x+18*plr_id-18
    +3*i-3,bullets[plr_id][i].x)
@@ -255,7 +255,7 @@ function update_data()
    and 128 or 0))
  end
  
- --update walls
+ --upload walls
  if plr_id==1 then
   for i=1,8 do
    poke(lookup.wall_x+2*i-2,
