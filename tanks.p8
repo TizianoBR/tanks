@@ -208,11 +208,11 @@ function get_data()
 	    y=peek(lookup.bull_y+
 	     3*j+18*i),
 	    --lower 3 bits
-	    dir=peek(lookup.bull_dir_state+
-	     3*j+18*i)%8,
+	    dir=peek(lookup.bull_dir_state
+	     +3*j+18*i)/8,
 	    --higher bit
-	    explode=peek(lookup.bull_dir_state+
-	     3*j+18*i)>=128})
+	    explode=peek(lookup.bull_dir_state
+	     +3*j+18*i)>=128})
 	  end
 	  add(bullets,plr_bullets)
 	 end
