@@ -55,7 +55,7 @@ function _init()
   {11,3,13},
   {10,9,13},
   {6,13,5},
-  {14,3,6}}
+  {14,2,6}}
 end
 
 function _update()
@@ -228,6 +228,7 @@ function connect()
 	 if tanks[i].x==0 and
 	  tanks[i].y==0 then
 	  poke(0x5f81,i)
+	  break
 	 end
  end
 end
