@@ -5,6 +5,11 @@ __lua__
 --tbr
 
 function _init()
+ if peek(0x5f80)==0 then
+	 poke(0x5f80,1)
+	 poke(0x5f81,0)
+	 run()
+	end
  for i=1,10 do
   flip()
  end
@@ -70,7 +75,7 @@ end
 
 function _draw()
  cls(15)
- ?plr_id
+ ?plr_id,0,4
  
  local s8={
   {1,false,false},
