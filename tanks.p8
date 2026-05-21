@@ -30,6 +30,7 @@ function _init()
   dir=0
  }
  bull={}
+ mine={}
 end
 
 function _update()
@@ -56,12 +57,14 @@ function _update()
   add(bull,{
    x=plr.x+cos(plr.dir)*4,
    y=plr.y+sin(plr.dir)*4,
-   dir=plr.dir
+   dir=plr.dir,
+   explode=false
   })
  end
  
  if btnp(🅾️) then
-  mines[plr_id]={x=plr.x,y=plr.y}
+  mine={x=plr.x,y=plr.y,
+   explode=false}
  end
  
  for b in all(bull) do
@@ -167,10 +170,7 @@ function get_data()
  tanks={}
  for i=0,5 do
   if i==plr_id then
-   add(tanks,{
-    x=plr.x,
-    y=plr.y,
-    dir=plr.dir})
+   add(tanks,plr)
   else
 	  add(tanks,{
 	   x=peek(lookup.tank_x+18*i),
@@ -225,32 +225,32 @@ end
 
 function upload_data()
  --upload tank
- poke(lookup.tank_x+18*(plr_id-1)
-  ,tanks[plr_id].x)
- poke(lookup.tank_y+18*(plr_id-1)
-  ,tanks[plr_id].y)
- poke(lookup.tank_dir+18*(plr_id-1)
-  ,flr(tanks[plr_id].dir*16))
+ poke(lookup.tank_x+18*plr_id-18
+  ,plr.x)
+ poke(lookup.tank_y+18*plr_id-18
+  ,plr.y)
+ poke(lookup.tank_dir+18*plr_id-18
+  ,flr(plr.dir*16))
  
  --upload mine
- poke(lookup.mine_x+18*(plr_id-1)
-  ,mines[plr_id].x)
- poke(lookup.mine_y+18*(plr_id-1)
-  ,mines[plr_id].y)
+ poke(lookup.mine_x+18*plr_id-18
+  ,mine.x)
+ poke(lookup.mine_y+18*plr_id-18
+  ,mine.y)
  poke(lookup.mine_state
-  +18*(plr_id-1),
-  mines[plr_id].explode and 1 or 0)
+  +18*plr_id-18,
+  mine.explode and 1 or 0)
  
  --upload bullets
  for i=1,4 do
-  poke(lookup.bull_x+18*plr_id-18
-   +3*i-3,bullets[plr_id][i].x)
-  poke(lookup.bull_y+18*plr_id-18
-   +3*i-3,bullets[plr_id][i].y)
+  poke(lookup.bull_x+18*plr_id
+   -18+3*i-3,bull[i].x)
+  poke(lookup.bull_y+18*plr_id
+   -18+3*i-3,bull[i].y)
   poke(lookup.bull_dir_state
    +18*plr_id-18+3*i-3,
-   flr(bullets[plr_id][i].dir*8)
-   +(bullets[plr_id][i].explode
+   flr(bull[i].dir*8)
+   +(bull[i].explode
    and 128 or 0))
  end
  
