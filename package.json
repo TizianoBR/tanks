@@ -1,0 +1,11 @@
+{
+	"name": "tanks",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"start": "npx pico-socket"
+	},
+	"dependencies": {
+		"pico-socket": "2.0.0"
+	}
+}
