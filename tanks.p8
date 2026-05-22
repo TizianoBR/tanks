@@ -278,8 +278,8 @@ function update_plr()
  --at once
  if btnp(❎) and #bull<4 then
   add(bull,{
-   x=plr.x+cos(plr.dir)*4,
-   y=plr.y+sin(plr.dir)*4,
+   x=plr.x+cos(plr.dir)*7,
+   y=plr.y+sin(plr.dir)*7,
    dir=plr.dir,
    explode=false,
    bounce=false})
@@ -302,15 +302,13 @@ end
 function move_plr(speed)
  local pos=plr.x
  plr.x+=cos(plr.dir)*speed
- if m_collide(plr,6,0) or
-  e_collide(plr,6)[1]=="t" then
+ if m_collide(plr,6,0) then
   plr.x=pos
  end
  
  pos=plr.y
  plr.y+=sin(plr.dir)*speed
- if m_collide(plr,6,0) or
-  e_collide(plr,6)[1]=="t" then
+ if m_collide(plr,6,0) then
   plr.y=pos
  end
 end
