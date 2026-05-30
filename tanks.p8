@@ -8,30 +8,34 @@ __lua__
 --with pico-socket
 
 --you can try the game here:
---https://tanks-thec.onrender.com/
+--https://tanks-thec.onrender.com
 
 function _init()
  connect()
 
 	plr_id=peek(0x5f81)
 	
- copy_map(1)
-
- spawn()
- 
+	copy_map(1)
+	
  --constants
  
  --object sizes
- t_sz=6
- b_sz=4
- m_sz=5
- e_sz=32
- --mine trigger
- mt_sz=24
+ t_sz=6 --tank(side)
+ b_sz=4 --bullet(side)
+ m_sz=5 --mine(side)
+ e_sz=32 --explosion(diameter)
+ mt_sz=24 --mine trigger(diameter)
+ w_sz=8 --breakable wall(side)
  
  --object speed
  t_spd=0.8
  b_spd=1
+ 
+ --dynamic explosion colors
+ expl_col={}
+ for i=1,6 do
+  add(expl_col,{9,2})
+ end
  
  --lookup tables for sprite id
  --offset depending on direction
@@ -81,6 +85,8 @@ function _update()
 
  update_plr()
  update_bullets()
+ update_mine()
+ update_walls()
  
  upload_data()
 end
@@ -96,6 +102,8 @@ function _draw()
  draw_mines()
  draw_tanks()
  draw_bullets()
+ draw_mine_explosions()
+ draw_reticle()
 end
 
 --copies a screen onto the first
@@ -105,9 +113,20 @@ function copy_map(map_id)
  for i=0,15 do
 	 memcpy(0x2000+128*i,0x2000
 	  +(16*(map_id%8))
-	  +(2048*flr(map_id/8))
+	  +(2048*(map_id\8))
 	  +128*i,16)
  end
+ 
+ --set breakable wall coordinates
+ local i=1
+ for x=0,15 do for y=0,15 do
+  if mget(x,y)==15 then
+   walls[i]={x=x,y=y};i+=1
+  end
+ end end
+ --create plr and upload walls
+ spawn()
+ upload_data()
 end
 
 --tracks the atribute "timer"
@@ -135,6 +154,16 @@ function timer_tick()
 	  end
   end
  end
+ 
+ for m in all(mines) do
+  if m.timer then
+   if m.timer>=0 then
+    m.timer-=1
+   else
+    m.timer=nil
+   end
+  end
+ end
 end
 -->8
 --netcode
@@ -158,9 +187,9 @@ lookup={
  --next tank starts at 0x5f94
  --last tank ends at 0x5fed
  
- --breakable walls (*8)
- wall_x=0x5fee,
- wall_y=0x5fef,
+ --breakable walls (*16)
+ --4 bits:x, 4 bits:y
+ wall_coor=0x5fee,
  
  --last wall ends at 0x5ffd
  
@@ -224,10 +253,12 @@ function get_data()
 
  --get breakable walls
  walls={}
- for i=0,7 do
+ for i=0,15 do
 	 add(walls,{
-	  x=peek(lookup.wall_x+2*i),
-	  y=peek(lookup.wall_y+2*i)})
+	  x=peek(lookup.wall_coor+i)
+	   \16,
+	  y=peek(lookup.wall_coor+i)
+	   %16})
 	end
 end
 
@@ -273,8 +304,8 @@ function upload_data()
  --upload breakable walls
  if plr_id==1 then
   for i,w in ipairs(walls) do
-   poke(lookup.wall_x+2*i-2,w.x)
-   poke(lookup.wall_y+2*i-2,w.y)
+   poke(lookup.wall_coor+i-1,
+    w.x*16+w.y)
   end
  end
 end
@@ -341,7 +372,7 @@ function update_plr()
 	 if btnp(🅾️) and mine.x==0
 	  and mine.y==0 then
 	  mine={x=plr.x,y=plr.y,
-	   explode=false}
+	   explode=false,ready=false}
 	 end
 	 
 	 local e=e_collide(plr,t_sz)
@@ -461,7 +492,7 @@ function e_collide_cir(e1,size1,
  for i=-1,1,2 do for j=-1,1,2 do
   if ((e1.x+size1*i-e2.x)^2+
    (e1.y+size1*j-e2.y)^2)^0.5
-   <=e2.size2/2 then
+   <=size2/2 then
    return true end
  end end
  
@@ -482,16 +513,6 @@ function draw_tanks()
 		 spr(1+s16[dir16][1],
 		  t.x-4,t.y-4,1,1,
 		  s16[dir16][2],s16[dir16][3])
-	 
-		 --reticle
-		 if i==plr_id and not t.timer
-		  then
-			 pset(t.x+cos(t.dir)*9,
-			  t.y+sin(t.dir)*9,8)
-			 spr(0,t.x+cos(t.dir-0.005)
-			  *17-4,
-			  t.y+sin(t.dir-0.005)*17-4)
-	  end
 	  
 	  pal()
   end
@@ -518,13 +539,49 @@ end
 
 function draw_mines()
  for m in all(mines) do
-  if m.x~=0 and m.y~=0 then
+  if m.x~=0 and m.y~=0 and 
+   not m.explode then
 	  spr(9,m.x-4,m.y-4)
   end
  end
 end
+
+function draw_mine_explosions()
+ for i,m in ipairs(mines) do
+  if m.x~=0 and m.y~=0 and 
+   m.explode then
+   if expl_col[i][2]==1 then
+	   expl_col[i][2]=2
+		  expl_col[i][1]=
+		   expl_col[i][1]==9
+		   and 7 or 9
+		 else
+		  expl_col[i][2]-=1
+		 end
+		 
+   circfill(m.x,m.y,e_sz/2,
+    expl_col[i][1])
+  end
+ end
+end
+
+function draw_reticle()
+ pal(13,tank_pal[plr_id][3])
+ pal(8,tank_pal[plr_id][1])
+ pal(2,tank_pal[plr_id][2])
+ 
+ if not plr.timer then
+	 pset(plr.x+cos(plr.dir)*9,
+	  plr.y+sin(plr.dir)*9,8)
+	 spr(0,plr.x+cos(plr.dir-0.005)
+	  *17-4,
+	  plr.y+sin(plr.dir-0.005)*17-4)
+ end
+ 
+ pal()
+end
 -->8
---bullets and mine
+--bullets, mine and walls
 
 function update_bullets()
  for b in all(bull) do
@@ -574,6 +631,76 @@ function move_bullet(b)
    b.bounce=true
   end
  end
+end
+
+function update_mine()
+ if not mine.timer then
+  if not mine.ready then
+   --wait until the player
+   --leaves the explosion area
+   --before fully activating
+   if not e_collide_cir(plr,
+    t_sz,mine,e_sz) then
+    mine.ready=true
+   end
+  elseif mine.x~=0 and
+   mine.y~=0 then
+   --explode when any tank is
+   --close enough
+   for t in all(tanks) do
+    if t.x~=0 and t.y~=0 and
+     e_collide_cir(plr,t_sz,
+	    mine,mt_sz) then
+	    mine.timer=30
+	    mine.explode=true
+	   end
+	  end
+  end
+  
+  local e=e_collide(mine,m_sz)
+  if e[1]=="b" and e[2].x~=0
+   and e[2].y~=0 then
+   mine.timer=30
+   mine.explode=true
+  end
+ elseif mine.timer==0 then
+  mine={x=0,y=0,explode=false}
+ end
+end
+
+function update_walls()
+ --delete exploded walls
+ if plr_id==1 then
+	 for w in all(walls) do
+	  for m in all(mines) do
+	   --fix coordinates for
+	   --collision calculation
+	   w.x=w.x*8+4;w.y=w.y*8+4
+	   
+	   if m.explode and
+	    e_collide_cir(w,w_sz,m,e_sz)
+	    then
+	    w.x=0;w.y=0
+	   end
+	   
+	   --reset coordinates
+	   w.x=w.x\8;w.y=w.y\8
+	  end
+	 end
+ end
+ 
+ --remove deleted walls form map
+ for x=0,15 do for y=0,15 do
+  if mget(x,y)==15 then
+   local found=false
+   for w in all(walls) do
+    if w.x==x and w.y==y then
+     found=true
+    end
+   end
+   if (not found) mset(x,y,0)
+  end
+ end end
 end
 __gfx__
 0000000000000000000000000002220002222000022088000000000000000000000000000d0000d0444444444444444444444444444444440000000011111111
