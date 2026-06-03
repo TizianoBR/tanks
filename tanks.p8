@@ -13,12 +13,12 @@ __lua__
 function _init()
  plr_id=peek(0x5f81)
  
- prev_kp_alv=0
- kp_alv_count=0
+ prev_kp_alv={0,0,0,0,0,0}
+ kp_alv_count={0,0,0,0,0,0}
  
  --indicates plr is not
 	--currently in a game
-	plr={x=254,y=254,dir=0}
+	plr={x=254,y=254,dir=0,kp_alv=0}
 	mine={x=0,y=0}
 	bull={}
  
@@ -123,9 +123,10 @@ function _update()
 	 update_walls()
 	end
 	
+	plr.kp_alv+=1
 	upload_data()
 	
-	if (plr_id>1) check_afk()
+	check_afk()
 end
 
 function _draw()
@@ -139,7 +140,11 @@ function _draw()
 	 map(0,0,0,0,16,16,1)
 	 ?peek(0x5f80)
 	 ?plr_id
-	 
+	 ?peek(0x5f94)
+	 for i=1,6 do
+		 ?kp_alv_count[i]
+		end
+		
 	 --any elements at 0,0 are not
 	 --drawn. this happens in every
 	 --function
@@ -229,6 +234,7 @@ lookup={
  --tank data (*6)
  tank_x=0x5f82,
  tank_y=0x5f83,
+ --4b: keep alive, 4b: dir
  tank_dir=0x5f84,
  --mine data
  mine_x=0x5f85,
@@ -237,6 +243,7 @@ lookup={
  --bullet data (*4)
  bull_x=0x5f88,
  bull_y=0x5f89,
+ --1b: explode, 4b: -, 3b: dir
  bull_dir_state=0x5f8a,
  
  --next tank starts at 0x5f94
@@ -331,7 +338,7 @@ function upload_data()
  poke(lookup.tank_y+18*plr_id-18
   ,plr.y)
  poke(lookup.tank_dir+18*plr_id-18
-  ,(plr.kp_alv+1)%16*16
+  ,(plr.kp_alv)%16*16
   +flr(plr.dir*16))
  
  --upload mine
@@ -404,22 +411,27 @@ end
 function check_afk()
  --keep alive variable should
  --always increase. if it does
- --not for too long, replace
- --player
- local kp_alv=
-  tanks[plar_id-1].kp_alv
- 
- if kp_alv==prev_kp_alv then
-  kp_alv_count+=1
+ --not for too long, wipe data
+ for i=1,6 do
+  if i~=plr_id then
+   local ka=tanks[i].kp_alv
+   if ka==prev_kp_alv[i] then
+    kp_alv_count[i]+=1
+   end
+   if kp_alv_count[i]>=150 then
+    if i==plr_id-1 then
+     memset(0x5f82+18*plr_id-18,
+     0,18)
+     plr_id-=1
+     poke(0x5f81,plr_id)
+    end
+    memset(0x5f82+18*i-18,
+     0,18)
+	   kp_alv_count[i]=0
+   end
+   prev_kp_alv[i]=ka
+  end
  end
- --150f -> 5s to reconnect
- if kp_alv_count>=150 then
-  plr_id-=1
-  poke(0x5f81,plr_id)
- end
- 
- prev_kp_alv=
-  tanks[plr_id-1].kp_alv
 end
 -->8
 --tank and entity functions
@@ -499,7 +511,8 @@ function spawn()
 			 plr={
 			  x=x,
 			  y=y,
-			  dir=atan2(64-x,64-y)}
+			  dir=atan2(64-x,64-y),
+			  kp_alv=0}
 			end
 		end
 	end
