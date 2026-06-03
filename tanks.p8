@@ -417,6 +417,8 @@ function check_afk()
    local ka=tanks[i].kp_alv
    if ka==prev_kp_alv[i] then
     kp_alv_count[i]+=1
+   else
+    kp_alv_count[i]=0
    end
    if kp_alv_count[i]>=150 then
     if i==plr_id-1 then
