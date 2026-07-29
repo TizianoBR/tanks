@@ -235,7 +235,7 @@ end
 function check_winner()
  winner=0
  for i,t in pairs(tanks) do
-  if t.x~=0 and t.y~=0 and
+  if t.x~=0 and t.y~=0 or
    t.x~=255 and t.y~=255 then
    if winner==0 then winner=i
    else winnner=-1 end
