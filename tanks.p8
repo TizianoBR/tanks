@@ -137,6 +137,7 @@ end
 
 function _draw()
  cls(15)
+ ?control
  
  if peek(0x5f80)==0 then
   draw_main()
