@@ -125,7 +125,12 @@ function _update()
 	 update_walls()
 	 
 	 if plr_id==1 then
-		 check_winner()
+		 update_countdown()
+		 
+		 if control~=mid(2,control,5)
+		  then
+		  check_winner()
+		 end
 		end
 	end
 	
@@ -154,11 +159,16 @@ function _draw()
 	 draw_mine_explosions()
 	 draw_reticle()
 	 
+	 if control<=4 then
+	  draw_countdown()
+	 end
+	 
 	 if timer.win then
 	  draw_win()
 	 end
 	 
 	 ?control
+	 ?timer.win
 	end
 end
 
@@ -251,6 +261,17 @@ function check_winner()
  
  if timer.win==0 then
   control=0
+  init_slct()
+ end
+end
+
+function update_countdown()
+ if control==mid(2,control,5)
+  and not timer.countdown then
+  control-=1
+  if control>0 then
+   timer.countdown=30
+  end
  end
 end
 
@@ -733,9 +754,15 @@ function draw_reticle()
 end
 
 function draw_win()
- printo("player "..(control-10)..
-  "wins!",30,2,tank_pal[control
-  -10][1])
+ printo("player "..(control-10)
+  .." wins!",30,2,
+  tank_pal[control-10][1])
+end
+
+function draw_countdown()
+ local c={8,10,11}
+ printo(control-1,62,61,
+  c[control-1])
 end
 
 function printo(t,x,y,c1,c2)
@@ -942,7 +969,7 @@ function update_slct()
  
  if plr_id==1 then
   if btnp2(❎) or btnp2(🅾️) then
-   control=1
+   control=5
    copy_map(level)
    sfx(8,-2)
   end
