@@ -169,7 +169,9 @@ function _draw()
 	 end
 	 
 	 ?control
-	 ?timer.win
+	 for t in all(tanks) do
+	  ?t.x.." "..t.y
+	 end
 	end
 end
 
@@ -249,7 +251,8 @@ function check_winner()
   if (t.x~=0 or t.y~=0) and
    (t.x~=255 or t.y~=255) then
    if winner==0 then winner=i
-   else winnner=-1 end
+   else winnner=-1
+   end
   end
  end
  
