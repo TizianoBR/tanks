@@ -247,11 +247,11 @@ end
 --alive and connected
 function check_winner()
  winner=0
- for i,t in pairs(tanks) do
+ for i,t in ipairs(tanks) do
   if (t.x~=0 or t.y~=0) and
    (t.x~=255 or t.y~=255) then
    if winner==0 then winner=i
-   else winnner=-1
+   else winner=-1
    end
   end
  end
