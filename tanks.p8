@@ -163,7 +163,8 @@ function _draw()
 	  draw_countdown()
 	 end
 	 
-	 if timer.win then
+	 if control==mid(11,control,16)
+	  then
 	  draw_win()
 	 end
 	 
@@ -245,8 +246,8 @@ end
 function check_winner()
  winner=0
  for i,t in pairs(tanks) do
-  if t.x~=0 and t.y~=0 or
-   t.x~=255 and t.y~=255 then
+  if (t.x~=0 or t.y~=0) and
+   (t.x~=255 or t.y~=255) then
    if winner==0 then winner=i
    else winnner=-1 end
   end
